@@ -1,0 +1,215 @@
+name: x64-ubuntu
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      skip:
+        description: 'Delete its name if you want to keep the job'
+        required: false
+        default: 'ubuntu,gcc-thread,clang-tidy,32bit-address,32bit-undefined'
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-22.04
+    if: |
+      (github.event_name == 'pull_request') || 
+      (github.event_name == 'push') || 
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.repository == 'tezc/sc')) && !contains(github.event.inputs.skip, 'ubuntu')
+    name: Build on Ubuntu
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - name: build
+        env:
+          CC: gcc
+        run: |
+          sudo apt update
+          sudo apt-get install valgrind cmake
+          mkdir build-debug && cd build-debug
+          cmake .. -DSANITIZER=address
+          make -j
+          make check
+          rm -rf *
+          cmake .. -DSANITIZER=undefined
+          make -j
+          make check
+          rm -rf *
+          cmake ..
+          make -j
+          make valgrind
+
+  ubuntu-clang:
+    runs-on: ubuntu-22.04
+    if: |
+      (github.event_name == 'pull_request') || 
+      (github.event_name == 'push') || 
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.repository == 'tezc/sc')) && !contains(github.event.inputs.skip, 'ubuntu')
+    name: Build on Ubuntu
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - name: build
+        env:
+          CC: clang
+        run: |
+          sudo apt update
+          sudo apt-get install valgrind cmake
+          mkdir build-debug && cd build-debug
+          cmake .. -DSANITIZER=address
+          make -j
+          make check
+          rm -rf *
+          cmake .. -DSANITIZER=undefined
+          make -j
+          make check
+
+  ubuntu-gcc-thread:
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request') || 
+      (github.event_name == 'push') || 
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.repository == 'tezc/sc')) && !contains(github.event.inputs.skip, 'gcc-thread')
+    name: Thread sanitizer
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - name: build
+        env:
+          CC: gcc
+        run: |
+          sudo apt update
+          sudo apt-get install cmake
+          mkdir build-debug && cd build-debug
+          cmake .. -DSANITIZER=thread
+          make -j
+          make check
+  ubuntu-clang-tidy:
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request') || 
+      (github.event_name == 'push') || 
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.repository == 'tezc/sc')) && !contains(github.event.inputs.skip, 'clang-tidy')
+    name: Clang Tidy
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - name: build
+        env:
+          CC: clang
+        run: |
+          sudo apt update
+          sudo apt-get install cmake clang-tidy
+          mkdir build-debug && cd build-debug
+          cmake .. -DSC_CLANG_TIDY=1
+          make -j
+          make check
+  ubuntu-32bit-address:
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request') || 
+      (github.event_name == 'push') || 
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.repository == 'tezc/sc')) && !contains(github.event.inputs.skip, '32bit-address')
+    name: 32bit-address
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - name: build
+        env:
+          CC: gcc
+        run: |
+          sudo apt update
+          sudo apt-get install cmake gcc-multilib
+          mkdir build-debug && cd build-debug
+          cmake .. -DCMAKE_C_FLAGS=-m32 -DSANITIZER=address
+          make -j
+          make check
+  ubuntu-32bit-undefined:
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request') || 
+      (github.event_name == 'push') || 
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.repository == 'tezc/sc')) && !contains(github.event.inputs.skip, '32bit-undefined')
+    name: 32bit-undefined
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - name: build
+        env:
+          CC: gcc
+        run: |
+          sudo apt update
+          sudo apt-get install cmake gcc-multilib
+          mkdir build-debug && cd build-debug
+          cmake .. -DCMAKE_C_FLAGS=-m32 -DSANITIZER=undefined
+          make -j
+          make check
+  ubuntu-zig-windows:
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request') ||
+      (github.event_name == 'push') ||
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'schedule' && github.repository == 'tezc/sc')) && !contains(github.event.inputs.skip, 'zig-windows')
+    name: Zig Windows
+    steps:
+      - uses: actions/checkout@v2.1.0
+      - name: build
+        run: |
+          sudo apt update
+          sudo apt-get install cmake curl tar wine
+          mkdir build-debug && cd build-debug
+          export ZIG=zig-x86_64-linux-0.17.0-dev.305+bdfbf432d
+          curl -o zig.tar.xz "https://ziglang.org/builds/$ZIG.tar.xz"
+          tar -xf zig.tar.xz
+          export CC="$(pwd)/$ZIG/zig cc -target x86_64-windows"
+          cmake .. -DCMAKE_SYSTEM_NAME=Windows
+          make -j
+          echo "==============" && echo sc_array_test && echo "=============="
+          DISPLAY= wine ./array/sc_array_test.exe
+          echo "==============" && echo sc_buf_test && echo "=============="
+          DISPLAY= wine ./buffer/sc_buf_test.exe
+          echo "==============" && echo sc_cond_test && echo "=============="
+          DISPLAY= wine ./condition/sc_cond_test.exe
+          echo "==============" && echo sc_crc32_test && echo "=============="
+          DISPLAY= wine ./crc32/sc_crc32_test.exe
+          echo "==============" && echo sc_heap_test && echo "=============="
+          DISPLAY= wine ./heap/sc_heap_test.exe
+          echo "==============" && echo sc_ini_test && echo "=============="
+          DISPLAY= wine ./ini/sc_ini_test.exe
+          echo "==============" && echo sc_list_test && echo "=============="
+          DISPLAY= wine ./linked-list/sc_list_test.exe
+          echo "==============" && echo sc_log_test && echo "=============="
+          DISPLAY= wine ./logger/sc_log_test.exe
+          echo "==============" && echo sc_map_test && echo "=============="
+          DISPLAY= wine ./map/sc_map_test.exe
+          echo "==============" && echo sc_mmap_test && echo "=============="
+          # DISPLAY= wine ./memory-map/sc_mmap_test.exe                               <-- hangs
+          echo "==============" && echo sc_mutex_test && echo "=============="
+          DISPLAY= wine ./mutex/sc_mutex_test.exe
+          echo "==============" && echo sc_option_test && echo "=============="
+          DISPLAY= wine ./option/sc_option_test.exe
+          echo "==============" && echo sc_queue_test && echo "=============="
+          DISPLAY= wine ./queue/sc_queue_test.exe
+          echo "==============" && echo sc_test && echo "=============="
+          DISPLAY= wine ./sc/sc_test.exe
+          echo "==============" && echo sc_signal_test && echo "=============="
+          DISPLAY= wine ./signal/sc_signal_test.exe
+          echo "==============" && echo sc_socket_test && echo "=============="
+          # DISPLAY= wine ./socket/sc_socket_test.exe                                 <-- Assertion failed
+          echo "==============" && echo sc_str_test && echo "=============="
+          DISPLAY= wine ./string/sc_str_test.exe
+          echo "==============" && echo sc_thread_test && echo "=============="
+          DISPLAY= wine ./thread/sc_thread_test.exe
+          echo "==============" && echo sc_time_test && echo "=============="
+          # DISPLAY= wine ./time/sc_time_test.exe                                     <-- wine: Unhandled illegal instruction
+          echo "==============" && echo sc_timer_test && echo "=============="
+          DISPLAY= wine ./timer/sc_timer_test.exe
+          echo "==============" && echo sc_uri_test && echo "=============="
+          DISPLAY= wine ./uri/sc_uri_test.exe
