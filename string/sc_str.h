@@ -169,6 +169,34 @@ bool sc_str_substring(char **str, uint32_t start, uint32_t end);
 bool sc_str_replace(char **str, const char *rep, const char *with);
 
 /**
+ * Find the first occurrence of 'substr' in 'str', starting the search at
+ * position 'fromIndex'.
+ *
+ * @param str       length prefixed string.
+ * @param substr    '\0' terminated substring to search for.
+ * @param fromIndex 0-based start position for the forward search.
+ * @return          0-based index of the first match. -1 if 'str' or 'substr'
+ *                  is NULL, 'fromIndex' is negative or beyond the string
+ *                  length, or the substring is not found.
+ */
+int64_t sc_str_index_of(const char *str, const char *substr, int64_t fromIndex);
+
+/**
+ * Find the last occurrence of 'substr' in 'str', searching backwards and only
+ * considering candidate matches whose starting index is <= 'fromIndex'.
+ *
+ * @param str       length prefixed string.
+ * @param substr    '\0' terminated substring to search for.
+ * @param fromIndex 0-based upper bound for the match start position when
+ *                  searching backwards.
+ * @return          0-based index of the last match within range. -1 if 'str'
+ *                  or 'substr' is NULL, 'fromIndex' is negative or beyond the
+ *                  string length, or the substring is not found.
+ */
+int64_t sc_str_last_index_of(const char *str, const char *substr,
+			     int64_t fromIndex);
+
+/**
  * Tokenization is zero-copy but a bit tricky. This function will mutate 'str',
  * but it is temporary. On each 'sc_str_token_begin' call, this function will
  * place '\0' character at the end of a token and put delimiter at the end of

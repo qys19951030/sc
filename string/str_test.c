@@ -588,6 +588,179 @@ void test6(void)
 	sc_str_destroy(&s2);
 }
 
+void test7(void)
+{
+	char *s1, *s2;
+	int64_t idx;
+
+	assert(sc_str_index_of(NULL, "abc", 0) == -1);
+	assert(sc_str_index_of(NULL, NULL, 0) == -1);
+	assert(sc_str_last_index_of(NULL, "abc", 0) == -1);
+	assert(sc_str_last_index_of(NULL, NULL, 0) == -1);
+
+	s1 = sc_str_create("abc");
+	assert(sc_str_index_of(s1, NULL, 0) == -1);
+	assert(sc_str_last_index_of(s1, NULL, 0) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("");
+	assert(sc_str_index_of(s1, "abc", 0) == -1);
+	assert(sc_str_index_of(s1, "", 0) == 0);
+	assert(sc_str_index_of(s1, "", 1) == -1);
+	assert(sc_str_last_index_of(s1, "abc", 0) == -1);
+	assert(sc_str_last_index_of(s1, "", 0) == 0);
+	assert(sc_str_last_index_of(s1, "", 1) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("hello");
+	assert(sc_str_index_of(s1, "hello world", 0) == -1);
+	assert(sc_str_last_index_of(s1, "hello world", 5) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("banana");
+	assert(sc_str_index_of(s1, "an", 0) == 1);
+	assert(sc_str_index_of(s1, "an", 2) == 3);
+	assert(sc_str_index_of(s1, "an", 4) == -1);
+	assert(sc_str_index_of(s1, "an", 6) == -1);
+	assert(sc_str_index_of(s1, "ba", 0) == 0);
+	assert(sc_str_index_of(s1, "na", 0) == 2);
+	assert(sc_str_index_of(s1, "na", 3) == 4);
+	assert(sc_str_index_of(s1, "banana", 0) == 0);
+	assert(sc_str_index_of(s1, "banana", 1) == -1);
+	assert(sc_str_index_of(s1, "xyz", 0) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("aaaaa");
+	assert(sc_str_index_of(s1, "aa", 0) == 0);
+	assert(sc_str_index_of(s1, "aa", 1) == 1);
+	assert(sc_str_index_of(s1, "aa", 2) == 2);
+	assert(sc_str_index_of(s1, "aa", 3) == 3);
+	assert(sc_str_index_of(s1, "aa", 4) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("hello hello world");
+	assert(sc_str_index_of(s1, "hello", 0) == 0);
+	assert(sc_str_index_of(s1, "hello", 1) == 6);
+	assert(sc_str_index_of(s1, "hello", 7) == -1);
+	assert(sc_str_index_of(s1, "world", 0) == 12);
+	assert(sc_str_index_of(s1, "world", 17) == -1);
+	assert(sc_str_index_of(s1, "o w", 4) == 10);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("banana");
+	assert(sc_str_last_index_of(s1, "an", 6) == 3);
+	assert(sc_str_last_index_of(s1, "an", 5) == 3);
+	assert(sc_str_last_index_of(s1, "an", 4) == 3);
+	assert(sc_str_last_index_of(s1, "an", 3) == 3);
+	assert(sc_str_last_index_of(s1, "an", 2) == 1);
+	assert(sc_str_last_index_of(s1, "an", 1) == 1);
+	assert(sc_str_last_index_of(s1, "an", 0) == -1);
+	assert(sc_str_last_index_of(s1, "ba", 6) == 0);
+	assert(sc_str_last_index_of(s1, "ba", 1) == 0);
+	assert(sc_str_last_index_of(s1, "ba", 0) == 0);
+	assert(sc_str_last_index_of(s1, "na", 6) == 4);
+	assert(sc_str_last_index_of(s1, "na", 4) == 4);
+	assert(sc_str_last_index_of(s1, "na", 3) == 2);
+	assert(sc_str_last_index_of(s1, "banana", 6) == 0);
+	assert(sc_str_last_index_of(s1, "banana", 0) == 0);
+	assert(sc_str_last_index_of(s1, "xyz", 6) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("aaaaa");
+	assert(sc_str_last_index_of(s1, "aa", 5) == 3);
+	assert(sc_str_last_index_of(s1, "aa", 4) == 3);
+	assert(sc_str_last_index_of(s1, "aa", 3) == 3);
+	assert(sc_str_last_index_of(s1, "aa", 2) == 2);
+	assert(sc_str_last_index_of(s1, "aa", 1) == 1);
+	assert(sc_str_last_index_of(s1, "aa", 0) == 0);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("hello hello world");
+	assert(sc_str_last_index_of(s1, "hello", 17) == 6);
+	assert(sc_str_last_index_of(s1, "hello", 6) == 6);
+	assert(sc_str_last_index_of(s1, "hello", 5) == 0);
+	assert(sc_str_last_index_of(s1, "hello", 0) == 0);
+	assert(sc_str_last_index_of(s1, "world", 17) == 12);
+	assert(sc_str_last_index_of(s1, "world", 12) == 12);
+	assert(sc_str_last_index_of(s1, "world", 11) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("abc");
+	assert(sc_str_index_of(s1, "", 0) == 0);
+	assert(sc_str_index_of(s1, "", 1) == 1);
+	assert(sc_str_index_of(s1, "", 2) == 2);
+	assert(sc_str_index_of(s1, "", 3) == 3);
+	assert(sc_str_index_of(s1, "", 4) == -1);
+	assert(sc_str_index_of(s1, "", -1) == -1);
+	assert(sc_str_last_index_of(s1, "", 0) == 0);
+	assert(sc_str_last_index_of(s1, "", 1) == 1);
+	assert(sc_str_last_index_of(s1, "", 2) == 2);
+	assert(sc_str_last_index_of(s1, "", 3) == 3);
+	assert(sc_str_last_index_of(s1, "", 4) == -1);
+	assert(sc_str_last_index_of(s1, "", -1) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("abc");
+	assert(sc_str_index_of(s1, "abc", -1) == -1);
+	assert(sc_str_index_of(s1, "abc", 4) == -1);
+	assert(sc_str_last_index_of(s1, "abc", -1) == -1);
+	assert(sc_str_last_index_of(s1, "abc", 4) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("hello");
+	assert(sc_str_index_of(s1, "h", 0) == 0);
+	assert(sc_str_index_of(s1, "o", 0) == 4);
+	assert(sc_str_index_of(s1, "o", 4) == 4);
+	assert(sc_str_index_of(s1, "o", 5) == -1);
+	assert(sc_str_last_index_of(s1, "h", 5) == 0);
+	assert(sc_str_last_index_of(s1, "h", 0) == 0);
+	assert(sc_str_last_index_of(s1, "o", 5) == 4);
+	assert(sc_str_last_index_of(s1, "o", 3) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("a");
+	assert(sc_str_index_of(s1, "a", 0) == 0);
+	assert(sc_str_index_of(s1, "a", 1) == -1);
+	assert(sc_str_index_of(s1, "", 0) == 0);
+	assert(sc_str_index_of(s1, "", 1) == 1);
+	assert(sc_str_index_of(s1, "", 2) == -1);
+	assert(sc_str_last_index_of(s1, "a", 1) == 0);
+	assert(sc_str_last_index_of(s1, "a", 0) == 0);
+	assert(sc_str_last_index_of(s1, "a", -1) == -1);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("ababa");
+	assert(sc_str_index_of(s1, "aba", 0) == 0);
+	assert(sc_str_index_of(s1, "aba", 1) == 2);
+	assert(sc_str_index_of(s1, "aba", 3) == -1);
+	assert(sc_str_last_index_of(s1, "aba", 5) == 2);
+	assert(sc_str_last_index_of(s1, "aba", 2) == 2);
+	assert(sc_str_last_index_of(s1, "aba", 1) == 0);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("prefix_suffix");
+	assert(sc_str_index_of(s1, "pre", 0) == 0);
+	assert(sc_str_index_of(s1, "fix", 0) == 3);
+	assert(sc_str_index_of(s1, "suffix", 0) == 7);
+	assert(sc_str_last_index_of(s1, "fix", 13) == 10);
+	assert(sc_str_last_index_of(s1, "fix", 9) == 3);
+	assert(sc_str_last_index_of(s1, "pre", 13) == 0);
+	sc_str_destroy(&s1);
+
+	s1 = sc_str_create("replace test");
+	s2 = sc_str_dup(s1);
+	sc_str_replace(&s1, "test", "ok");
+	assert(strcmp(s1, "replace ok") == 0);
+	sc_str_destroy(&s1);
+	sc_str_destroy(&s2);
+
+	s1 = sc_str_create("test string");
+	sc_str_append(&s1, " more");
+	sc_str_substring(&s1, 0, 4);
+	assert(strcmp(s1, "test") == 0);
+	sc_str_destroy(&s1);
+}
+
 int main(void)
 {
 
@@ -599,5 +772,6 @@ int main(void)
 	test4();
 	test5();
 	test6();
+	test7();
 	return 0;
 }

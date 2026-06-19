@@ -350,6 +350,84 @@ bool sc_str_substring(char **str, uint32_t start, uint32_t end)
 	return true;
 }
 
+int64_t sc_str_index_of(const char *str, const char *substr, int64_t fromIndex)
+{
+	uint32_t len, sub_len;
+	uint32_t i, end;
+
+	if (str == NULL || substr == NULL) {
+		return -1;
+	}
+
+	len = sc_str_meta(str)->len;
+
+	if (fromIndex < 0 || fromIndex > (int64_t) len) {
+		return -1;
+	}
+
+	sub_len = (uint32_t) strlen(substr);
+
+	if (sub_len == 0) {
+		return fromIndex;
+	}
+
+	if (sub_len > len || (uint32_t) fromIndex + sub_len > len) {
+		return -1;
+	}
+
+	end = len - sub_len;
+	for (i = (uint32_t) fromIndex; i <= end; i++) {
+		if (!memcmp(str + i, substr, sub_len)) {
+			return (int64_t) i;
+		}
+	}
+
+	return -1;
+}
+
+int64_t sc_str_last_index_of(const char *str, const char *substr,
+			     int64_t fromIndex)
+{
+	uint32_t len, sub_len;
+	uint32_t i, start;
+
+	if (str == NULL || substr == NULL) {
+		return -1;
+	}
+
+	len = sc_str_meta(str)->len;
+
+	if (fromIndex < 0 || fromIndex > (int64_t) len) {
+		return -1;
+	}
+
+	sub_len = (uint32_t) strlen(substr);
+
+	if (sub_len == 0) {
+		return fromIndex;
+	}
+
+	if (sub_len > len) {
+		return -1;
+	}
+
+	start = len - sub_len;
+	if ((uint32_t) fromIndex < start) {
+		start = (uint32_t) fromIndex;
+	}
+
+	for (i = start;; i--) {
+		if (!memcmp(str + i, substr, sub_len)) {
+			return (int64_t) i;
+		}
+		if (i == 0) {
+			break;
+		}
+	}
+
+	return -1;
+}
+
 bool sc_str_replace(char **str, const char *replace, const char *with)
 {
 	assert(replace != NULL && with != NULL);
